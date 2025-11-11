@@ -34,7 +34,7 @@ Without standardized format, Dataview queries become unreliable or impossible.
 ### ✅ Multi-Select Mode
 - Select multiple items at once
 - Press `Enter` to check items
-- Press `Esc` to add all selected items
+- Press `Esc` to add all selected items, if no selected no action
 
 ### 🔢 Value Validation
 - Set up rules for numbers (with units like "km", "miles")
@@ -94,7 +94,7 @@ Exercises:    ← Put cursor here
 **Select multiple items:**
 - Press `Enter` on "hiking" → ☑ hiking (1 selected)
 - Press `Enter` on "running" → ☑ running (2 selected)
-- Press `Esc` to confirm
+- Press `Esc` to confirm to fill options
 
 **Result:**
 ```yaml
