@@ -1,6 +1,6 @@
 {
   "id": "frontmatter-suggester",
-  "name": "Frontmatter Auto-Suggest",
+  "name": "Frontmatter Suggester",
   "version": "1.3.0",
   "minAppVersion": "0.15.0",
   "description": "Auto-suggest for frontmatter fields with multi-select support, option-level type validation (number/boolean/enum)",
