@@ -21,7 +21,7 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-// main.ts
+// src/main.ts
 var main_exports = {};
 __export(main_exports, {
   default: () => FrontmatterSuggesterPlugin
@@ -29,7 +29,7 @@ __export(main_exports, {
 module.exports = __toCommonJS(main_exports);
 var import_obsidian4 = require("obsidian");
 
-// types.ts
+// src/types.ts
 var DEFAULT_SETTINGS = {
   rules: [],
   globalSettings: {
@@ -40,7 +40,7 @@ var DEFAULT_SETTINGS = {
   }
 };
 
-// suggester.ts
+// src/suggester.ts
 var import_obsidian = require("obsidian");
 
 // node_modules/js-yaml/dist/js-yaml.mjs
@@ -2700,7 +2700,7 @@ var safeLoad = renamed("safeLoad", "load");
 var safeLoadAll = renamed("safeLoadAll", "loadAll");
 var safeDump = renamed("safeDump", "dump");
 
-// frontmatter-parser.ts
+// src/frontmatter-parser.ts
 var FrontmatterParser = class {
   /**
    * Get frontmatter boundaries in the document
@@ -3085,7 +3085,7 @@ var FrontmatterParser = class {
   }
 };
 
-// suggester.ts
+// src/suggester.ts
 var FrontmatterSuggester = class extends import_obsidian.EditorSuggest {
   constructor(app, settings) {
     super(app);
@@ -3435,10 +3435,10 @@ ${indentStr}${suggestion.option.key}: `;
   }
 };
 
-// settings.ts
+// src/settings.ts
 var import_obsidian3 = require("obsidian");
 
-// rule-editor-modal.ts
+// src/rule-editor-modal.ts
 var import_obsidian2 = require("obsidian");
 var RuleEditorModal = class extends import_obsidian2.Modal {
   constructor(app, plugin, rule, ruleIndex, onSave) {
@@ -3594,7 +3594,7 @@ var RuleEditorModal = class extends import_obsidian2.Modal {
   }
 };
 
-// settings.ts
+// src/settings.ts
 var FrontmatterSuggesterSettingTab = class extends import_obsidian3.PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
@@ -3743,7 +3743,7 @@ var FrontmatterSuggesterSettingTab = class extends import_obsidian3.PluginSettin
   }
 };
 
-// validator.ts
+// src/validator.ts
 var ValueValidator = class {
   /**
    * Validate a value against the value configuration
@@ -3915,7 +3915,7 @@ var ValueValidator = class {
   }
 };
 
-// option-validator.ts
+// src/option-validator.ts
 var OptionValidator = class {
   /**
    * Validate a value against an option's configuration
@@ -4041,7 +4041,7 @@ var OptionValidator = class {
   }
 };
 
-// validation-decorator.ts
+// src/validation-decorator.ts
 var import_view = require("@codemirror/view");
 var import_state = require("@codemirror/state");
 var ValidationDecorator = class {
@@ -4094,7 +4094,7 @@ var ValidationDecorator = class {
   }
 };
 
-// value-validator-extension.ts
+// src/value-validator-extension.ts
 var ValueValidatorExtension = class {
   constructor(settings) {
     this.validationTimeouts = /* @__PURE__ */ new Map();
@@ -4261,7 +4261,7 @@ var ValueValidatorExtension = class {
   }
 };
 
-// main.ts
+// src/main.ts
 var FrontmatterSuggesterPlugin = class extends import_obsidian4.Plugin {
   constructor() {
     super(...arguments);

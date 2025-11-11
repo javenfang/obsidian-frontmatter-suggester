@@ -332,15 +332,41 @@ meditation
 
 ## Development
 
+### Project Structure
+
+```
+frontmatter-suggester/
+├── src/                      # TypeScript source files
+│   ├── main.ts               # Plugin entry point
+│   ├── types.ts              # Type definitions
+│   ├── suggester.ts          # Autocomplete suggester
+│   ├── frontmatter-parser.ts # YAML parser
+│   ├── settings.ts           # Settings UI
+│   ├── rule-editor-modal.ts  # Rule editor
+│   ├── value-validator-extension.ts  # Validation coordinator
+│   ├── option-validator.ts   # Option-level validation
+│   ├── validator.ts          # Value-level validation (legacy)
+│   └── validation-decorator.ts # Validation UI
+├── main.js                   # Compiled output (Git tracked)
+├── styles.css                # Plugin styles
+├── manifest.json             # Plugin metadata
+└── versions.json             # Version compatibility
+```
+
+### Build Commands
+
 ```bash
 # Install dependencies
 npm install
 
-# Build plugin
+# Build for production
 npm run build
 
-# Output: main.js
+# Development mode (watch for changes)
+npm run dev
 ```
+
+The build process compiles TypeScript sources from `src/` into a single `main.js` file using esbuild.
 
 ## Version History
 

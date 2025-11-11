@@ -27,3 +27,6 @@ dist/
 # Environment
 .env
 .env.local
+
+# User data (plugin configuration)
+data.json
