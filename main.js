@@ -3743,178 +3743,6 @@ var FrontmatterSuggesterSettingTab = class extends import_obsidian3.PluginSettin
   }
 };
 
-// src/validator.ts
-var ValueValidator = class {
-  /**
-   * Validate a value against the value configuration
-   */
-  static validate(value, config) {
-    var _a;
-    if (!value || value.trim() === "") {
-      if ((_a = config.validation) == null ? void 0 : _a.required) {
-        return {
-          valid: false,
-          error: config.validation.customErrorMessage || "Value is required"
-        };
-      }
-      return { valid: true };
-    }
-    const trimmedValue = value.trim();
-    switch (config.type) {
-      case "number":
-        return this.validateNumber(trimmedValue, config);
-      case "text":
-        return this.validateText(trimmedValue, config);
-      case "none":
-        return { valid: true };
-      default:
-        return { valid: true };
-    }
-  }
-  /**
-   * Validate number type value
-   */
-  static validateNumber(value, config) {
-    var _a, _b, _c;
-    const parseResult = this.parseNumberWithUnit(value, config.units);
-    if (!parseResult) {
-      return {
-        valid: false,
-        error: "Invalid number format",
-        suggestion: this.getNumberFormatSuggestion(config)
-      };
-    }
-    const { numValue, unit } = parseResult;
-    if (((_a = config.validation) == null ? void 0 : _a.allowDecimal) === false && !Number.isInteger(numValue)) {
-      return {
-        valid: false,
-        error: "Decimal numbers are not allowed",
-        suggestion: "Please enter an integer value"
-      };
-    }
-    if (((_b = config.validation) == null ? void 0 : _b.min) !== void 0 && numValue < config.validation.min) {
-      return {
-        valid: false,
-        error: `Value must be at least ${config.validation.min}`,
-        suggestion: `Enter a value >= ${config.validation.min}`
-      };
-    }
-    if (((_c = config.validation) == null ? void 0 : _c.max) !== void 0 && numValue > config.validation.max) {
-      return {
-        valid: false,
-        error: `Value must be at most ${config.validation.max}`,
-        suggestion: `Enter a value <= ${config.validation.max}`
-      };
-    }
-    if (unit) {
-      const validUnits = (config.units || []).map((u) => u.unit);
-      if (validUnits.length > 0 && !validUnits.includes(unit)) {
-        return {
-          valid: false,
-          error: `Invalid unit "${unit}"`,
-          suggestion: `Valid units: ${validUnits.join(", ")}`
-        };
-      }
-    } else {
-      if (config.unitBehavior === "required" && (config.units || []).length > 0) {
-        const validUnits = (config.units || []).map((u) => u.unit);
-        return {
-          valid: false,
-          error: "Unit is required",
-          suggestion: `Add a unit: ${validUnits.join(", ")}`
-        };
-      }
-    }
-    return { valid: true };
-  }
-  /**
-   * Validate text type value
-   */
-  static validateText(value, config) {
-    var _a, _b, _c;
-    if (((_a = config.validation) == null ? void 0 : _a.minLength) !== void 0 && value.length < config.validation.minLength) {
-      return {
-        valid: false,
-        error: `Text must be at least ${config.validation.minLength} characters`,
-        suggestion: `Current length: ${value.length}`
-      };
-    }
-    if (((_b = config.validation) == null ? void 0 : _b.maxLength) !== void 0 && value.length > config.validation.maxLength) {
-      return {
-        valid: false,
-        error: `Text must be at most ${config.validation.maxLength} characters`,
-        suggestion: `Current length: ${value.length}`
-      };
-    }
-    if ((_c = config.validation) == null ? void 0 : _c.pattern) {
-      try {
-        const regex = new RegExp(config.validation.pattern);
-        if (!regex.test(value)) {
-          return {
-            valid: false,
-            error: config.validation.customErrorMessage || "Value does not match required pattern",
-            suggestion: `Pattern: ${config.validation.pattern}`
-          };
-        }
-      } catch (e) {
-        console.error("Invalid regex pattern in validation config:", e);
-      }
-    }
-    return { valid: true };
-  }
-  /**
-   * Parse a number with optional unit
-   * Examples: "10", "10.5", "10km", "10.5 km", "10 g"
-   */
-  static parseNumberWithUnit(value, units) {
-    const match = value.match(/^([-+]?\d+\.?\d*)\s*(.*)$/);
-    if (!match) {
-      return null;
-    }
-    const numPart = match[1];
-    const unitPart = match[2].trim();
-    const numValue = parseFloat(numPart);
-    if (isNaN(numValue)) {
-      return null;
-    }
-    return {
-      numValue,
-      unit: unitPart || void 0
-    };
-  }
-  /**
-   * Get suggestion for number format based on config
-   */
-  static getNumberFormatSuggestion(config) {
-    var _a;
-    const examples = [];
-    if (config.units && config.units.length > 0) {
-      const exampleUnit = config.defaultUnit || config.units[0].unit;
-      examples.push(`10${exampleUnit}`);
-      examples.push(`10 ${exampleUnit}`);
-    } else {
-      examples.push("10");
-      if (((_a = config.validation) == null ? void 0 : _a.allowDecimal) !== false) {
-        examples.push("10.5");
-      }
-    }
-    return `Examples: ${examples.join(", ")}`;
-  }
-  /**
-   * Create a user-friendly error message for display
-   */
-  static formatErrorMessage(result) {
-    if (result.valid) {
-      return "";
-    }
-    let message = result.error || "Invalid value";
-    if (result.suggestion) {
-      message += ` (${result.suggestion})`;
-    }
-    return message;
-  }
-};
-
 // src/option-validator.ts
 var OptionValidator = class {
   /**
@@ -3925,10 +3753,8 @@ var OptionValidator = class {
       return { valid: true };
     }
     const trimmedValue = value.trim();
-    if (!option.type) {
-      return { valid: true };
-    }
-    switch (option.type) {
+    const type2 = option.type || "number";
+    switch (type2) {
       case "number":
         return this.validateNumber(trimmedValue, option.units);
       case "boolean":
@@ -4167,14 +3993,10 @@ var ValueValidatorExtension = class {
         continue;
       }
       const matchingOption = (_a = matchingRule.options) == null ? void 0 : _a.find((opt) => opt.key === keyPart);
-      let result;
-      if (matchingOption && matchingOption.type) {
-        result = OptionValidator.validate(valuePart, matchingOption);
-      } else if (matchingRule.valueConfig) {
-        result = ValueValidator.validate(valuePart, matchingRule.valueConfig);
-      } else {
+      if (!matchingOption) {
         continue;
       }
+      const result = OptionValidator.validate(valuePart, matchingOption);
       if (!result.valid) {
         const valueStart = currentLine.indexOf(valuePart, colonIndex);
         const from = editor.posToOffset({ line, ch: valueStart });

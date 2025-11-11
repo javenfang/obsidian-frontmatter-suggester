@@ -13,7 +13,6 @@ export interface FieldRule {
 	fieldPath?: string;            // Auto-generated: parentField.childField or just parentField
 	sourceType: SourceType;        // Data source type
 	options?: OptionItem[];        // Inline options (when sourceType = 'inline')
-	valueConfig?: ValueConfig;     // Value configuration
 	displayFormat?: DisplayFormat; // Display format configuration
 	indent?: number;               // Custom indent (optional, default auto-calculated)
 	description?: string;          // Rule description
@@ -36,40 +35,10 @@ export interface OptionItem {
 	enumValues?: string[];              // For enum: allowed values
 }
 
-export interface ValueConfig {
-	type: 'number' | 'text' | 'none';  // Value type
-	units?: UnitConfig[];               // Optional unit list
-	defaultUnit?: string;               // Default unit (empty string or undefined means no default unit)
-	unitBehavior?: 'optional' | 'required' | 'none'; // Unit behavior
-	outputFormat?: 'simple' | 'structured' | 'compact'; // Output format
-	validation?: ValidationConfig;      // Validation rules
-}
-
-export interface ValidationConfig {
-	// For number type
-	min?: number;              // Minimum value (inclusive)
-	max?: number;              // Maximum value (inclusive)
-	allowDecimal?: boolean;    // Allow decimal numbers (default: true)
-
-	// For text type
-	minLength?: number;        // Minimum string length
-	maxLength?: number;        // Maximum string length
-	pattern?: string;          // Regular expression pattern
-
-	// Common
-	required?: boolean;        // Whether value is required (default: false)
-	customErrorMessage?: string; // Custom error message
-}
-
 export interface ValidationResult {
 	valid: boolean;
 	error?: string;
 	suggestion?: string;
-}
-
-export interface UnitConfig {
-	unit: string;         // Unit name, e.g., "km", "g", "ml"
-	description?: string; // Unit description
 }
 
 export interface DisplayFormat {

@@ -1,7 +1,6 @@
 import { Editor, EditorPosition, MarkdownView, Notice, editorViewField } from 'obsidian';
 import { FieldRule, PluginSettings } from './types';
 import { FrontmatterParser } from './frontmatter-parser';
-import { ValueValidator } from './validator';
 import { OptionValidator } from './option-validator';
 import { ValidationDecorator, ValidationError } from './validation-decorator';
 
@@ -112,17 +111,13 @@ export class ValueValidatorExtension {
 			const matchingOption = matchingRule.options?.find(opt => opt.key === keyPart);
 
 			// Perform validation
-			let result;
-			if (matchingOption && matchingOption.type) {
-				// Use option-level validation
-				result = OptionValidator.validate(valuePart, matchingOption);
-			} else if (matchingRule.valueConfig) {
-				// Fallback to legacy value-level validation
-				result = ValueValidator.validate(valuePart, matchingRule.valueConfig);
-			} else {
-				// No validation configured
+			if (!matchingOption) {
+				// No matching option - skip validation
 				continue;
 			}
+
+			// Use option-level validation (type defaults to 'number' if not specified)
+			const result = OptionValidator.validate(valuePart, matchingOption);
 
 			if (!result.valid) {
 				// Calculate character positions for the value

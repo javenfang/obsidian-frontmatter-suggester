@@ -15,12 +15,10 @@ export class OptionValidator {
 
 		const trimmedValue = value.trim();
 
-		// If option has no type specified, accept any value
-		if (!option.type) {
-			return { valid: true };
-		}
+		// Default to number type if not specified
+		const type = option.type || 'number';
 
-		switch (option.type) {
+		switch (type) {
 			case 'number':
 				return this.validateNumber(trimmedValue, option.units);
 			case 'boolean':
