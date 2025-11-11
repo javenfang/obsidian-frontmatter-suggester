@@ -3503,8 +3503,6 @@ var RuleEditorModal = class extends import_obsidian2.Modal {
     if (this.rule.sourceType === "inline") {
       this.renderInlineOptions(contentEl);
     }
-    this.renderValueSettings(contentEl);
-    this.renderDisplaySettings(contentEl);
     const buttonContainer = contentEl.createDiv({ cls: "modal-button-container" });
     buttonContainer.style.display = "flex";
     buttonContainer.style.gap = "10px";
@@ -3522,26 +3520,38 @@ var RuleEditorModal = class extends import_obsidian2.Modal {
   renderInlineOptions(container) {
     container.createEl("h4", { text: "Options" });
     const desc = container.createDiv({ cls: "setting-item-description" });
-    desc.createEl("p", { text: "Format: key|description|icon (one per line)" });
+    desc.createEl("p", { text: "Format: key: type | params (one per line)" });
+    desc.createEl("p", { text: "Types: number, boolean, enum" });
     desc.createEl("p", { text: "Examples:" });
     const exampleList = desc.createEl("ul");
-    exampleList.createEl("li", { text: "hiking" });
-    exampleList.createEl("li", { text: "running|\u8DD1\u6B65" });
-    exampleList.createEl("li", { text: "push_up|\u4FEF\u5367\u6491|\u{1F4AA}" });
+    exampleList.createEl("li", { text: "running: number | km, miles" });
+    exampleList.createEl("li", { text: "push_ups: number" });
+    exampleList.createEl("li", { text: "completed: boolean" });
+    exampleList.createEl("li", { text: "mood: enum | happy, sad, tired" });
     const textArea = container.createEl("textarea", {
       cls: "frontmatter-options-textarea",
       attr: {
         rows: "10",
-        placeholder: "key|description|icon"
+        placeholder: "key: type | params"
       }
     });
     const optionsText = (this.rule.options || []).map((opt) => {
-      let line = opt.key;
-      if (opt.description)
-        line += `|${opt.description}`;
-      if (opt.icon)
-        line += `|${opt.icon}`;
-      return line;
+      if (opt.type) {
+        let line = `${opt.key}: ${opt.type}`;
+        if (opt.type === "number" && opt.units && opt.units.length > 0) {
+          line += ` | ${opt.units.join(", ")}`;
+        } else if (opt.type === "enum" && opt.enumValues && opt.enumValues.length > 0) {
+          line += ` | ${opt.enumValues.join(", ")}`;
+        }
+        return line;
+      } else {
+        let line = opt.key;
+        if (opt.description)
+          line += ` | ${opt.description}`;
+        if (opt.icon)
+          line += ` | ${opt.icon}`;
+        return line;
+      }
     }).join("\n");
     textArea.value = optionsText;
     textArea.addEventListener("blur", async () => {
@@ -3550,95 +3560,33 @@ var RuleEditorModal = class extends import_obsidian2.Modal {
     const stats = container.createDiv({ cls: "frontmatter-options-stats" });
     stats.setText(`Lines: ${(this.rule.options || []).length}`);
   }
-  renderValueSettings(container) {
-    container.createEl("h3", { text: "Value Settings" });
-    if (!this.rule.valueConfig) {
-      this.rule.valueConfig = {
-        type: "number",
-        unitBehavior: "optional",
-        outputFormat: "simple"
-      };
-    }
-    new import_obsidian2.Setting(container).setName("Value Type").setDesc("Type of value expected after the key").addDropdown(
-      (dropdown) => {
-        var _a;
-        return dropdown.addOptions({
-          "number": "Number",
-          "text": "Text",
-          "none": "None (key only)"
-        }).setValue(((_a = this.rule.valueConfig) == null ? void 0 : _a.type) || "number").onChange(async (value) => {
-          this.rule.valueConfig.type = value;
-          this.onOpen();
-        });
-      }
-    );
-    if (this.rule.valueConfig.type === "number") {
-      const unitsDesc = container.createDiv({ cls: "setting-item-description" });
-      unitsDesc.createEl("p", { text: "Units (optional, format: unit|description)" });
-      unitsDesc.createEl("p", { text: "Examples: km|\u516C\u91CC, \u6B21|\u6B21\u6570, g|\u514B" });
-      const unitsTextArea = container.createEl("textarea", {
-        cls: "frontmatter-units-textarea",
-        attr: {
-          rows: "5",
-          placeholder: "unit|description"
-        }
-      });
-      const unitsText = (this.rule.valueConfig.units || []).map((u) => `${u.unit}${u.description ? "|" + u.description : ""}`).join("\n");
-      unitsTextArea.value = unitsText;
-      unitsTextArea.addEventListener("blur", async () => {
-        this.rule.valueConfig.units = this.parseUnitsText(unitsTextArea.value);
-      });
-      if (this.rule.valueConfig.units && this.rule.valueConfig.units.length > 0) {
-        new import_obsidian2.Setting(container).setName("Default Unit").setDesc("Leave empty (none) or select a unit as default").addDropdown((dropdown) => {
-          dropdown.addOption("", "(none) - no default unit");
-          this.rule.valueConfig.units.forEach((u) => {
-            dropdown.addOption(u.unit, u.unit);
-          });
-          dropdown.setValue(this.rule.valueConfig.defaultUnit || "");
-          dropdown.onChange(async (value) => {
-            this.rule.valueConfig.defaultUnit = value || void 0;
-          });
-        });
-      }
-    }
-  }
-  renderDisplaySettings(container) {
-    container.createEl("h3", { text: "Display Settings" });
-    if (!this.rule.displayFormat) {
-      this.rule.displayFormat = {
-        showDescription: true,
-        showIcon: true
-      };
-    }
-    new import_obsidian2.Setting(container).setName("Show description in suggestions").addToggle(
-      (toggle) => toggle.setValue(this.rule.displayFormat.showDescription).onChange(async (value) => {
-        this.rule.displayFormat.showDescription = value;
-      })
-    );
-    new import_obsidian2.Setting(container).setName("Show icon in suggestions").addToggle(
-      (toggle) => toggle.setValue(this.rule.displayFormat.showIcon).onChange(async (value) => {
-        this.rule.displayFormat.showIcon = value;
-      })
-    );
-  }
   parseOptionsText(text) {
     return text.split("\n").map((line) => line.trim()).filter((line) => line !== "").map((line) => {
-      const parts = line.split("|").map((p) => p.trim());
-      return {
-        key: parts[0],
-        description: parts[1] || void 0,
-        icon: parts[2] || void 0
-      };
+      if (line.includes(":")) {
+        return this.parseTypedOption(line);
+      } else {
+        const parts = line.split("|").map((p) => p.trim());
+        return {
+          key: parts[0],
+          description: parts[1] || void 0,
+          icon: parts[2] || void 0
+        };
+      }
     }).filter((opt) => opt.key !== "");
   }
-  parseUnitsText(text) {
-    return text.split("\n").map((line) => line.trim()).filter((line) => line !== "").map((line) => {
-      const parts = line.split("|").map((p) => p.trim());
-      return {
-        unit: parts[0],
-        description: parts[1] || void 0
-      };
-    }).filter((u) => u.unit !== "");
+  parseTypedOption(line) {
+    const colonIndex = line.indexOf(":");
+    const key = line.substring(0, colonIndex).trim();
+    const rest = line.substring(colonIndex + 1).trim();
+    const parts = rest.split("|").map((p) => p.trim());
+    const type2 = parts[0];
+    const option = { key, type: type2 };
+    if (type2 === "number" && parts[1]) {
+      option.units = parts[1].split(",").map((u) => u.trim()).filter((u) => u !== "");
+    } else if (type2 === "enum" && parts[1]) {
+      option.enumValues = parts[1].split(",").map((v) => v.trim()).filter((v) => v !== "");
+    }
+    return option;
   }
   onClose() {
     const { contentEl } = this;
@@ -3795,20 +3743,550 @@ var FrontmatterSuggesterSettingTab = class extends import_obsidian3.PluginSettin
   }
 };
 
+// validator.ts
+var ValueValidator = class {
+  /**
+   * Validate a value against the value configuration
+   */
+  static validate(value, config) {
+    var _a;
+    if (!value || value.trim() === "") {
+      if ((_a = config.validation) == null ? void 0 : _a.required) {
+        return {
+          valid: false,
+          error: config.validation.customErrorMessage || "Value is required"
+        };
+      }
+      return { valid: true };
+    }
+    const trimmedValue = value.trim();
+    switch (config.type) {
+      case "number":
+        return this.validateNumber(trimmedValue, config);
+      case "text":
+        return this.validateText(trimmedValue, config);
+      case "none":
+        return { valid: true };
+      default:
+        return { valid: true };
+    }
+  }
+  /**
+   * Validate number type value
+   */
+  static validateNumber(value, config) {
+    var _a, _b, _c;
+    const parseResult = this.parseNumberWithUnit(value, config.units);
+    if (!parseResult) {
+      return {
+        valid: false,
+        error: "Invalid number format",
+        suggestion: this.getNumberFormatSuggestion(config)
+      };
+    }
+    const { numValue, unit } = parseResult;
+    if (((_a = config.validation) == null ? void 0 : _a.allowDecimal) === false && !Number.isInteger(numValue)) {
+      return {
+        valid: false,
+        error: "Decimal numbers are not allowed",
+        suggestion: "Please enter an integer value"
+      };
+    }
+    if (((_b = config.validation) == null ? void 0 : _b.min) !== void 0 && numValue < config.validation.min) {
+      return {
+        valid: false,
+        error: `Value must be at least ${config.validation.min}`,
+        suggestion: `Enter a value >= ${config.validation.min}`
+      };
+    }
+    if (((_c = config.validation) == null ? void 0 : _c.max) !== void 0 && numValue > config.validation.max) {
+      return {
+        valid: false,
+        error: `Value must be at most ${config.validation.max}`,
+        suggestion: `Enter a value <= ${config.validation.max}`
+      };
+    }
+    if (unit) {
+      const validUnits = (config.units || []).map((u) => u.unit);
+      if (validUnits.length > 0 && !validUnits.includes(unit)) {
+        return {
+          valid: false,
+          error: `Invalid unit "${unit}"`,
+          suggestion: `Valid units: ${validUnits.join(", ")}`
+        };
+      }
+    } else {
+      if (config.unitBehavior === "required" && (config.units || []).length > 0) {
+        const validUnits = (config.units || []).map((u) => u.unit);
+        return {
+          valid: false,
+          error: "Unit is required",
+          suggestion: `Add a unit: ${validUnits.join(", ")}`
+        };
+      }
+    }
+    return { valid: true };
+  }
+  /**
+   * Validate text type value
+   */
+  static validateText(value, config) {
+    var _a, _b, _c;
+    if (((_a = config.validation) == null ? void 0 : _a.minLength) !== void 0 && value.length < config.validation.minLength) {
+      return {
+        valid: false,
+        error: `Text must be at least ${config.validation.minLength} characters`,
+        suggestion: `Current length: ${value.length}`
+      };
+    }
+    if (((_b = config.validation) == null ? void 0 : _b.maxLength) !== void 0 && value.length > config.validation.maxLength) {
+      return {
+        valid: false,
+        error: `Text must be at most ${config.validation.maxLength} characters`,
+        suggestion: `Current length: ${value.length}`
+      };
+    }
+    if ((_c = config.validation) == null ? void 0 : _c.pattern) {
+      try {
+        const regex = new RegExp(config.validation.pattern);
+        if (!regex.test(value)) {
+          return {
+            valid: false,
+            error: config.validation.customErrorMessage || "Value does not match required pattern",
+            suggestion: `Pattern: ${config.validation.pattern}`
+          };
+        }
+      } catch (e) {
+        console.error("Invalid regex pattern in validation config:", e);
+      }
+    }
+    return { valid: true };
+  }
+  /**
+   * Parse a number with optional unit
+   * Examples: "10", "10.5", "10km", "10.5 km", "10 g"
+   */
+  static parseNumberWithUnit(value, units) {
+    const match = value.match(/^([-+]?\d+\.?\d*)\s*(.*)$/);
+    if (!match) {
+      return null;
+    }
+    const numPart = match[1];
+    const unitPart = match[2].trim();
+    const numValue = parseFloat(numPart);
+    if (isNaN(numValue)) {
+      return null;
+    }
+    return {
+      numValue,
+      unit: unitPart || void 0
+    };
+  }
+  /**
+   * Get suggestion for number format based on config
+   */
+  static getNumberFormatSuggestion(config) {
+    var _a;
+    const examples = [];
+    if (config.units && config.units.length > 0) {
+      const exampleUnit = config.defaultUnit || config.units[0].unit;
+      examples.push(`10${exampleUnit}`);
+      examples.push(`10 ${exampleUnit}`);
+    } else {
+      examples.push("10");
+      if (((_a = config.validation) == null ? void 0 : _a.allowDecimal) !== false) {
+        examples.push("10.5");
+      }
+    }
+    return `Examples: ${examples.join(", ")}`;
+  }
+  /**
+   * Create a user-friendly error message for display
+   */
+  static formatErrorMessage(result) {
+    if (result.valid) {
+      return "";
+    }
+    let message = result.error || "Invalid value";
+    if (result.suggestion) {
+      message += ` (${result.suggestion})`;
+    }
+    return message;
+  }
+};
+
+// option-validator.ts
+var OptionValidator = class {
+  /**
+   * Validate a value against an option's configuration
+   */
+  static validate(value, option) {
+    if (!value || value.trim() === "") {
+      return { valid: true };
+    }
+    const trimmedValue = value.trim();
+    if (!option.type) {
+      return { valid: true };
+    }
+    switch (option.type) {
+      case "number":
+        return this.validateNumber(trimmedValue, option.units);
+      case "boolean":
+        return this.validateBoolean(trimmedValue);
+      case "enum":
+        return this.validateEnum(trimmedValue, option.enumValues);
+      default:
+        return { valid: true };
+    }
+  }
+  /**
+   * Validate number type
+   */
+  static validateNumber(value, units) {
+    const parseResult = this.parseNumberWithUnit(value);
+    if (!parseResult) {
+      return {
+        valid: false,
+        error: "Invalid number format",
+        suggestion: this.getNumberSuggestion(units)
+      };
+    }
+    const { unit } = parseResult;
+    if (units && units.length > 0) {
+      if (!unit) {
+        return {
+          valid: false,
+          error: "Unit required",
+          suggestion: `Valid units: ${units.join(", ")}`
+        };
+      }
+      if (!units.includes(unit)) {
+        return {
+          valid: false,
+          error: `Invalid unit "${unit}"`,
+          suggestion: `Valid units: ${units.join(", ")}`
+        };
+      }
+    } else {
+      if (unit) {
+        return {
+          valid: false,
+          error: "No unit expected",
+          suggestion: "Enter plain number"
+        };
+      }
+    }
+    return { valid: true };
+  }
+  /**
+   * Validate boolean type
+   */
+  static validateBoolean(value) {
+    const lowerValue = value.toLowerCase();
+    const validValues = ["true", "false", "yes", "no"];
+    if (!validValues.includes(lowerValue)) {
+      return {
+        valid: false,
+        error: "Invalid boolean value",
+        suggestion: "Valid: true, false, yes, no"
+      };
+    }
+    return { valid: true };
+  }
+  /**
+   * Validate enum type
+   */
+  static validateEnum(value, enumValues) {
+    if (!enumValues || enumValues.length === 0) {
+      return { valid: true };
+    }
+    if (!enumValues.includes(value)) {
+      return {
+        valid: false,
+        error: "Invalid value",
+        suggestion: `Valid: ${enumValues.join(", ")}`
+      };
+    }
+    return { valid: true };
+  }
+  /**
+   * Parse number with optional unit
+   * Examples: "10", "10.5", "10km", "10 km"
+   */
+  static parseNumberWithUnit(value) {
+    const match = value.match(/^([-+]?\d+\.?\d*)\s*(.*)$/);
+    if (!match) {
+      return null;
+    }
+    const numPart = match[1];
+    const unitPart = match[2].trim();
+    const numValue = parseFloat(numPart);
+    if (isNaN(numValue)) {
+      return null;
+    }
+    return {
+      numValue,
+      unit: unitPart || void 0
+    };
+  }
+  /**
+   * Get suggestion for number format
+   */
+  static getNumberSuggestion(units) {
+    if (units && units.length > 0) {
+      const exampleUnit = units[0];
+      return `Examples: 10${exampleUnit}, 10 ${exampleUnit}`;
+    }
+    return "Examples: 10, 10.5";
+  }
+};
+
+// validation-decorator.ts
+var import_view = require("@codemirror/view");
+var import_state = require("@codemirror/state");
+var ValidationDecorator = class {
+  constructor() {
+    this.errors = /* @__PURE__ */ new Map();
+  }
+  /**
+   * Set validation errors for a file
+   */
+  setErrors(filePath, errors) {
+    this.errors.set(filePath, errors);
+  }
+  /**
+   * Get validation errors for a file
+   */
+  getErrors(filePath) {
+    return this.errors.get(filePath) || [];
+  }
+  /**
+   * Clear validation errors for a file
+   */
+  clearErrors(filePath) {
+    this.errors.delete(filePath);
+  }
+  /**
+   * Clear all validation errors
+   */
+  clearAllErrors() {
+    this.errors.clear();
+  }
+  /**
+   * Build decorations for the current view
+   */
+  buildDecorations(view, filePath) {
+    const builder = new import_state.RangeSetBuilder();
+    const errors = this.getErrors(filePath);
+    for (const error of errors.sort((a, b) => a.from - b.from)) {
+      builder.add(
+        error.from,
+        error.to,
+        import_view.Decoration.mark({
+          class: "frontmatter-validation-error",
+          attributes: {
+            title: error.result.error || "Validation error"
+          }
+        })
+      );
+    }
+    return builder.finish();
+  }
+};
+
+// value-validator-extension.ts
+var ValueValidatorExtension = class {
+  constructor(settings) {
+    this.validationTimeouts = /* @__PURE__ */ new Map();
+    this.lastValidatedContent = /* @__PURE__ */ new Map();
+    this.settings = settings;
+    this.decorator = new ValidationDecorator();
+  }
+  updateSettings(settings) {
+    this.settings = settings;
+  }
+  /**
+   * Validate value at current cursor position
+   * Called when user moves cursor or edits text
+   */
+  validateAtCursor(editor, view) {
+    var _a;
+    const cursor = editor.getCursor();
+    if (!FrontmatterParser.isInFrontmatter(cursor, editor)) {
+      if (view.file) {
+        this.decorator.clearErrors(view.file.path);
+      }
+      return;
+    }
+    const content = editor.getValue();
+    const contentKey = `${(_a = view.file) == null ? void 0 : _a.path}-${cursor.line}`;
+    if (this.lastValidatedContent.get(contentKey) === content) {
+      return;
+    }
+    this.lastValidatedContent.set(contentKey, content);
+    const errors = this.validateAllFrontmatter(editor);
+    if (view.file) {
+      this.decorator.setErrors(view.file.path, errors);
+    }
+    const currentLineErrors = errors.filter((error) => {
+      const errorPos = editor.offsetToPos(error.from);
+      return errorPos.line === cursor.line;
+    });
+    if (currentLineErrors.length > 0) {
+      this.showValidationToast(currentLineErrors[0].result);
+    }
+  }
+  /**
+   * Validate all frontmatter values and return errors
+   */
+  validateAllFrontmatter(editor) {
+    var _a;
+    const errors = [];
+    const lineCount = editor.lineCount();
+    for (let line = 0; line < lineCount; line++) {
+      const pos = { line, ch: 0 };
+      if (!FrontmatterParser.isInFrontmatter(pos, editor)) {
+        continue;
+      }
+      const fieldContext = FrontmatterParser.getCurrentFieldPath(pos, editor);
+      if (!fieldContext) {
+        continue;
+      }
+      const matchingRule = this.findMatchingRule(fieldContext.path);
+      if (!matchingRule || !matchingRule.enabled) {
+        continue;
+      }
+      const currentLine = editor.getLine(line);
+      const colonIndex = currentLine.indexOf(":");
+      if (colonIndex === -1) {
+        continue;
+      }
+      const keyPart = currentLine.substring(0, colonIndex).trim();
+      const valuePart = currentLine.substring(colonIndex + 1).trim();
+      if (!valuePart) {
+        continue;
+      }
+      const matchingOption = (_a = matchingRule.options) == null ? void 0 : _a.find((opt) => opt.key === keyPart);
+      let result;
+      if (matchingOption && matchingOption.type) {
+        result = OptionValidator.validate(valuePart, matchingOption);
+      } else if (matchingRule.valueConfig) {
+        result = ValueValidator.validate(valuePart, matchingRule.valueConfig);
+      } else {
+        continue;
+      }
+      if (!result.valid) {
+        const valueStart = currentLine.indexOf(valuePart, colonIndex);
+        const from = editor.posToOffset({ line, ch: valueStart });
+        const to = editor.posToOffset({ line, ch: valueStart + valuePart.length });
+        errors.push({
+          from,
+          to,
+          result
+        });
+      }
+    }
+    return errors;
+  }
+  /**
+   * Debounced validation - validates after user stops typing
+   */
+  validateWithDebounce(editor, view, delay = 500) {
+    var _a;
+    const cursor = editor.getCursor();
+    const lineKey = `${(_a = view.file) == null ? void 0 : _a.path}-${cursor.line}`;
+    const existingTimeout = this.validationTimeouts.get(lineKey);
+    if (existingTimeout) {
+      clearTimeout(existingTimeout);
+    }
+    const timeout = setTimeout(() => {
+      this.validateAtCursor(editor, view);
+      this.validationTimeouts.delete(lineKey);
+    }, delay);
+    this.validationTimeouts.set(lineKey, timeout);
+  }
+  /**
+   * Find matching rule for a field path
+   */
+  findMatchingRule(fieldPath) {
+    for (const rule of this.settings.rules) {
+      if (rule.fieldPath === fieldPath) {
+        return rule;
+      }
+    }
+    for (const rule of this.settings.rules) {
+      if (fieldPath.startsWith(rule.fieldPath + ".")) {
+        return rule;
+      }
+    }
+    return null;
+  }
+  /**
+   * Show validation toast notification
+   */
+  showValidationToast(result) {
+    const container = document.createElement("div");
+    container.className = "frontmatter-validation-modal";
+    const content = container.createDiv({ cls: "frontmatter-validation-modal-content" });
+    const title = content.createDiv({ cls: "frontmatter-validation-modal-title" });
+    title.createSpan({ text: "\u26A0\uFE0F " });
+    title.createSpan({ text: result.error || "Validation error" });
+    if (result.suggestion) {
+      const suggestion = content.createDiv({ cls: "frontmatter-validation-modal-suggestion" });
+      suggestion.createSpan({ text: "\u{1F4A1} " });
+      suggestion.createSpan({ text: result.suggestion });
+    }
+    document.body.appendChild(container);
+    setTimeout(() => {
+      container.classList.add("frontmatter-validation-modal-fade-out");
+      setTimeout(() => {
+        container.remove();
+      }, 300);
+    }, 3e3);
+  }
+  /**
+   * Get the decorator instance
+   */
+  getDecorator() {
+    return this.decorator;
+  }
+  /**
+   * Cleanup timeouts
+   */
+  cleanup() {
+    for (const timeout of this.validationTimeouts.values()) {
+      clearTimeout(timeout);
+    }
+    this.validationTimeouts.clear();
+  }
+};
+
 // main.ts
 var FrontmatterSuggesterPlugin = class extends import_obsidian4.Plugin {
   constructor() {
     super(...arguments);
     this.suggester = null;
+    this.validator = null;
   }
   async onload() {
     await this.loadSettings();
     this.suggester = new FrontmatterSuggester(this.app, this.settings);
     this.registerEditorSuggest(this.suggester);
+    this.validator = new ValueValidatorExtension(this.settings);
+    this.registerEvent(
+      this.app.workspace.on("editor-change", (editor, view) => {
+        if (this.validator && view instanceof import_obsidian4.MarkdownView) {
+          this.validator.validateWithDebounce(editor, view);
+        }
+      })
+    );
     this.updateSuggester();
     this.addSettingTab(new FrontmatterSuggesterSettingTab(this.app, this));
   }
   onunload() {
+    var _a;
+    (_a = this.validator) == null ? void 0 : _a.cleanup();
+    this.validator = null;
     this.suggester = null;
   }
   async loadSettings() {
@@ -3820,6 +4298,9 @@ var FrontmatterSuggesterPlugin = class extends import_obsidian4.Plugin {
   updateSuggester() {
     if (this.suggester) {
       this.suggester.updateSettings(this.settings);
+    }
+    if (this.validator) {
+      this.validator.updateSettings(this.settings);
     }
   }
 };

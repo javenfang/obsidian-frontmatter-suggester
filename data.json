@@ -9,31 +9,26 @@
       "options": [
         {
           "key": "hiking",
-          "description": "爬山越野"
+          "description": "km"
         },
         {
           "key": "running",
-          "description": "跑步"
+          "description": "km"
         },
         {
-          "key": "air_squat",
-          "description": "深蹲"
+          "key": "air_squat"
         },
         {
-          "key": "wall_sit",
-          "description": "靠墙静蹲"
+          "key": "wall_sit"
         },
         {
-          "key": "plank",
-          "description": "平板支撑"
+          "key": "plank"
         },
         {
-          "key": "hip_bridge",
-          "description": "臀桥"
+          "key": "hip_bridge"
         },
         {
-          "key": "push_up",
-          "description": "俯卧撑"
+          "key": "push_up"
         }
       ],
       "displayFormat": {
@@ -49,7 +44,8 @@
           {
             "unit": "km"
           }
-        ]
+        ],
+        "validation": {}
       },
       "parentField": "Habits Yestoday",
       "childField": "Exercises"

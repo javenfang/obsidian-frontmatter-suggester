@@ -117,12 +117,6 @@ export class RuleEditorModal extends Modal {
 			this.renderInlineOptions(contentEl);
 		}
 
-		// Value Settings
-		this.renderValueSettings(contentEl);
-
-		// Display Settings
-		this.renderDisplaySettings(contentEl);
-
 		// Save and Cancel buttons
 		const buttonContainer = contentEl.createDiv({ cls: 'modal-button-container' });
 		buttonContainer.style.display = 'flex';
@@ -145,28 +139,42 @@ export class RuleEditorModal extends Modal {
 		container.createEl('h4', { text: 'Options' });
 
 		const desc = container.createDiv({ cls: 'setting-item-description' });
-		desc.createEl('p', { text: 'Format: key|description|icon (one per line)' });
+		desc.createEl('p', { text: 'Format: key: type | params (one per line)' });
+		desc.createEl('p', { text: 'Types: number, boolean, enum' });
 		desc.createEl('p', { text: 'Examples:' });
 		const exampleList = desc.createEl('ul');
-		exampleList.createEl('li', { text: 'hiking' });
-		exampleList.createEl('li', { text: 'running|跑步' });
-		exampleList.createEl('li', { text: 'push_up|俯卧撑|💪' });
+		exampleList.createEl('li', { text: 'running: number | km, miles' });
+		exampleList.createEl('li', { text: 'push_ups: number' });
+		exampleList.createEl('li', { text: 'completed: boolean' });
+		exampleList.createEl('li', { text: 'mood: enum | happy, sad, tired' });
 
 		const textArea = container.createEl('textarea', {
 			cls: 'frontmatter-options-textarea',
 			attr: {
 				rows: '10',
-				placeholder: 'key|description|icon'
+				placeholder: 'key: type | params'
 			}
 		});
 
 		// Convert options to text
 		const optionsText = (this.rule.options || [])
 			.map(opt => {
-				let line = opt.key;
-				if (opt.description) line += `|${opt.description}`;
-				if (opt.icon) line += `|${opt.icon}`;
-				return line;
+				// New format with type
+				if (opt.type) {
+					let line = `${opt.key}: ${opt.type}`;
+					if (opt.type === 'number' && opt.units && opt.units.length > 0) {
+						line += ` | ${opt.units.join(', ')}`;
+					} else if (opt.type === 'enum' && opt.enumValues && opt.enumValues.length > 0) {
+						line += ` | ${opt.enumValues.join(', ')}`;
+					}
+					return line;
+				} else {
+					// Legacy format
+					let line = opt.key;
+					if (opt.description) line += ` | ${opt.description}`;
+					if (opt.icon) line += ` | ${opt.icon}`;
+					return line;
+				}
 			})
 			.join('\n');
 
@@ -180,135 +188,51 @@ export class RuleEditorModal extends Modal {
 		stats.setText(`Lines: ${(this.rule.options || []).length}`);
 	}
 
-	private renderValueSettings(container: HTMLElement): void {
-		container.createEl('h3', { text: 'Value Settings' });
-
-		// Initialize valueConfig if not exists
-		if (!this.rule.valueConfig) {
-			this.rule.valueConfig = {
-				type: 'number',
-				unitBehavior: 'optional',
-				outputFormat: 'simple'
-			};
-		}
-
-		new Setting(container)
-			.setName('Value Type')
-			.setDesc('Type of value expected after the key')
-			.addDropdown(dropdown => dropdown
-				.addOptions({
-					'number': 'Number',
-					'text': 'Text',
-					'none': 'None (key only)'
-				})
-				.setValue(this.rule.valueConfig?.type || 'number')
-				.onChange(async (value) => {
-					this.rule.valueConfig!.type = value as any;
-					// Re-render to show/hide units and attributes
-					this.onOpen();
-				})
-			);
-
-		// Units (for number type)
-		if (this.rule.valueConfig.type === 'number') {
-			const unitsDesc = container.createDiv({ cls: 'setting-item-description' });
-			unitsDesc.createEl('p', { text: 'Units (optional, format: unit|description)' });
-			unitsDesc.createEl('p', { text: 'Examples: km|公里, 次|次数, g|克' });
-
-			const unitsTextArea = container.createEl('textarea', {
-				cls: 'frontmatter-units-textarea',
-				attr: {
-					rows: '5',
-					placeholder: 'unit|description'
-				}
-			});
-
-			const unitsText = (this.rule.valueConfig.units || [])
-				.map(u => `${u.unit}${u.description ? '|' + u.description : ''}`)
-				.join('\n');
-
-			unitsTextArea.value = unitsText;
-
-			unitsTextArea.addEventListener('blur', async () => {
-				this.rule.valueConfig!.units = this.parseUnitsText(unitsTextArea.value);
-			});
-
-			// Default unit - with (none) option as first
-			if (this.rule.valueConfig.units && this.rule.valueConfig.units.length > 0) {
-				new Setting(container)
-					.setName('Default Unit')
-					.setDesc('Leave empty (none) or select a unit as default')
-					.addDropdown(dropdown => {
-						dropdown.addOption('', '(none) - no default unit');
-						this.rule.valueConfig!.units!.forEach(u => {
-							dropdown.addOption(u.unit, u.unit);
-						});
-						dropdown.setValue(this.rule.valueConfig!.defaultUnit || '');
-						dropdown.onChange(async (value) => {
-							this.rule.valueConfig!.defaultUnit = value || undefined;
-						});
-					});
-			}
-		}
-	}
-
-
-	private renderDisplaySettings(container: HTMLElement): void {
-		container.createEl('h3', { text: 'Display Settings' });
-
-		if (!this.rule.displayFormat) {
-			this.rule.displayFormat = {
-				showDescription: true,
-				showIcon: true
-			};
-		}
-
-		new Setting(container)
-			.setName('Show description in suggestions')
-			.addToggle(toggle => toggle
-				.setValue(this.rule.displayFormat!.showDescription)
-				.onChange(async (value) => {
-					this.rule.displayFormat!.showDescription = value;
-				})
-			);
-
-		new Setting(container)
-			.setName('Show icon in suggestions')
-			.addToggle(toggle => toggle
-				.setValue(this.rule.displayFormat!.showIcon)
-				.onChange(async (value) => {
-					this.rule.displayFormat!.showIcon = value;
-				})
-			);
-	}
-
 	private parseOptionsText(text: string): OptionItem[] {
 		return text.split('\n')
 			.map(line => line.trim())
 			.filter(line => line !== '')
 			.map(line => {
-				const parts = line.split('|').map(p => p.trim());
-				return {
-					key: parts[0],
-					description: parts[1] || undefined,
-					icon: parts[2] || undefined
-				};
+				// New format: "key: type | param1, param2"
+				// Old format: "key | description | icon"
+
+				// Check if line contains type declaration (has ":")
+				if (line.includes(':')) {
+					return this.parseTypedOption(line);
+				} else {
+					// Legacy format
+					const parts = line.split('|').map(p => p.trim());
+					return {
+						key: parts[0],
+						description: parts[1] || undefined,
+						icon: parts[2] || undefined
+					};
+				}
 			})
 			.filter(opt => opt.key !== '');
 	}
 
-	private parseUnitsText(text: string): { unit: string; description?: string }[] {
-		return text.split('\n')
-			.map(line => line.trim())
-			.filter(line => line !== '')
-			.map(line => {
-				const parts = line.split('|').map(p => p.trim());
-				return {
-					unit: parts[0],
-					description: parts[1] || undefined
-				};
-			})
-			.filter(u => u.unit !== '');
+	private parseTypedOption(line: string): OptionItem {
+		// Format: "key: type | param1, param2"
+		const colonIndex = line.indexOf(':');
+		const key = line.substring(0, colonIndex).trim();
+		const rest = line.substring(colonIndex + 1).trim();
+
+		const parts = rest.split('|').map(p => p.trim());
+		const type = parts[0] as 'number' | 'boolean' | 'enum';
+
+		const option: OptionItem = { key, type };
+
+		// Parse type-specific parameters
+		if (type === 'number' && parts[1]) {
+			// Units: "km, miles"
+			option.units = parts[1].split(',').map(u => u.trim()).filter(u => u !== '');
+		} else if (type === 'enum' && parts[1]) {
+			// Enum values: "happy, neutral, sad"
+			option.enumValues = parts[1].split(',').map(v => v.trim()).filter(v => v !== '');
+		}
+
+		return option;
 	}
 
 	onClose() {

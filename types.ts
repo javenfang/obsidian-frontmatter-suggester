@@ -28,9 +28,12 @@ export type SourceType =
 	| 'recent-values' // Recently used values
 
 export interface OptionItem {
-	key: string;          // Required: the key to insert
-	description?: string; // Optional: description text
-	icon?: string;        // Optional: emoji icon
+	key: string;                        // Required: the key to insert
+	description?: string;               // Optional: description text
+	icon?: string;                      // Optional: emoji icon
+	type?: 'number' | 'boolean' | 'enum'; // Value type for validation
+	units?: string[];                   // For number: allowed units (empty = no unit)
+	enumValues?: string[];              // For enum: allowed values
 }
 
 export interface ValueConfig {
@@ -39,6 +42,29 @@ export interface ValueConfig {
 	defaultUnit?: string;               // Default unit (empty string or undefined means no default unit)
 	unitBehavior?: 'optional' | 'required' | 'none'; // Unit behavior
 	outputFormat?: 'simple' | 'structured' | 'compact'; // Output format
+	validation?: ValidationConfig;      // Validation rules
+}
+
+export interface ValidationConfig {
+	// For number type
+	min?: number;              // Minimum value (inclusive)
+	max?: number;              // Maximum value (inclusive)
+	allowDecimal?: boolean;    // Allow decimal numbers (default: true)
+
+	// For text type
+	minLength?: number;        // Minimum string length
+	maxLength?: number;        // Maximum string length
+	pattern?: string;          // Regular expression pattern
+
+	// Common
+	required?: boolean;        // Whether value is required (default: false)
+	customErrorMessage?: string; // Custom error message
+}
+
+export interface ValidationResult {
+	valid: boolean;
+	error?: string;
+	suggestion?: string;
 }
 
 export interface UnitConfig {
