@@ -4,16 +4,16 @@ An Obsidian plugin that provides smart autocomplete suggestions when filling out
 
 ## What does it do?
 
-When you're filling out properties at the top of your notes, this plugin suggests items from pre-configured lists as you type. It saves you from having to remember exact names or typing them repeatedly.
+When you're filling out properties at the top of your notes (the YAML frontmatter section), this plugin suggests items from pre-configured lists as you type. It saves you from having to remember exact names or typing them repeatedly.
 
 **Example:** You have a daily exercise log. Instead of typing "hiking", "running", "push_ups" every day, just trigger the autocomplete and select from your list.
 
-## Why use standardized frontmatter?
+## Why use standardized properties?
 
-**For habit tracking and data analysis:** Consistent field names and formats are essential for querying your data with Dataview.
+**For habit tracking and data analysis:** Consistent property names and formats are essential for querying your data with Dataview.
 
-When you track habits with standardized frontmatter:
-- Same field names every day → Easy to query across all notes
+When you track habits with standardized properties:
+- Same property names every day → Easy to query across all notes
 - Validated values → Reliable statistics and charts
 - Structured format → Works seamlessly with Dataview queries
 
@@ -56,8 +56,8 @@ Without standardized format, Dataview queries become unreliable or impossible.
 
 ```
 ┌─────────────────────────────────────┐
-│ Parent Field: Exercises             │
-│ Child Field: (leave empty)          │
+│ Parent Property: Exercises          │
+│ Child Property: (leave empty)       │
 │ Multi-Select: ☑ Enabled             │
 │                                      │
 │ Options (one per line):              │
@@ -170,8 +170,8 @@ The notification disappears after 3 seconds.
 
 **Rule setup:**
 ```
-Parent Field: Habits Yesterday
-Child Field: Exercises
+Parent Property: Habits Yesterday
+Child Property: Exercises
 Options:
   hiking: number | km
   running: number | km
@@ -194,7 +194,7 @@ Habits Yesterday:
 
 **Rule setup:**
 ```
-Parent Field: Medications
+Parent Property: Medications
 Options:
   aspirin: number | mg
   ibuprofen: number | mg
@@ -214,7 +214,7 @@ Medications:
 
 **Rule setup:**
 ```
-Parent Field: Tags
+Parent Property: Tags
 Options:
   work
   personal
@@ -253,8 +253,8 @@ Tags:
 
 ### Per-Rule Settings
 
-- **Parent Field**: Top-level property name
-- **Child Field**: Optional nested property
+- **Parent Property**: Top-level property name
+- **Child Property**: Optional nested property
 - **Multi-Select**: Allow selecting multiple items at once
 - **Description**: Optional note about what this rule is for
 
@@ -306,8 +306,8 @@ meditation
 ## Troubleshooting
 
 ### Autocomplete doesn't appear
-- Make sure cursor is at the end of the field line
-- Check that field name matches your rule exactly
+- Make sure cursor is at the end of the property line
+- Check that property name matches your rule exactly
 - Verify the rule is enabled in settings
 
 ### Wrong indentation
@@ -325,9 +325,10 @@ meditation
 ## Technical Notes
 
 - Uses Obsidian's EditorSuggest API
-- YAML parsing with indentation fallback
+- YAML frontmatter parsing with indentation fallback
 - Real-time validation with 500ms debounce
 - Works with any valid YAML frontmatter structure
+- Properties and frontmatter are the same thing - properties is Obsidian's user-facing term for YAML frontmatter
 
 ## Development
 
@@ -356,6 +357,11 @@ npm run build
 **v1.0.0** - Initial release
 - Basic autocomplete
 - Nested field support
+
+## Links
+
+- **GitHub Repository**: [frontmatter-suggester](https://github.com/javenfang/obsidian-frontmatter-suggester)
+- **Issues & Bug Reports**: [GitHub Issues](https://github.com/javenfang/obsidian-frontmatter-suggester/issues)
 
 ## Author
 

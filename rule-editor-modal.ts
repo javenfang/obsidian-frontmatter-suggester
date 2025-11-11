@@ -41,14 +41,14 @@ export class RuleEditorModal extends Modal {
 			}
 		};
 
-		// Field Path Settings
-		contentEl.createEl('h3', { text: 'Field Path' });
+		// Property Path Settings
+		contentEl.createEl('h3', { text: 'Property Path' });
 
 		new Setting(contentEl)
-			.setName('Parent Field')
+			.setName('Parent Property')
 			.setDesc('e.g., "Habits Yestoday", "Tags", "Project"')
 			.addText(text => text
-				.setPlaceholder('Parent field name')
+				.setPlaceholder('Parent property name')
 				.setValue(this.rule.parentField)
 				.onChange(async (value) => {
 					this.rule.parentField = value;
@@ -57,10 +57,10 @@ export class RuleEditorModal extends Modal {
 			);
 
 		new Setting(contentEl)
-			.setName('Child Field')
-			.setDesc('Optional - leave empty for top-level field')
+			.setName('Child Property')
+			.setDesc('Optional - leave empty for top-level property')
 			.addText(text => text
-				.setPlaceholder('Child field name (optional)')
+				.setPlaceholder('Child property name (optional)')
 				.setValue(this.rule.childField || '')
 				.onChange(async (value) => {
 					this.rule.childField = value || '';

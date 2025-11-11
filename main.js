@@ -3464,15 +3464,15 @@ var RuleEditorModal = class extends import_obsidian2.Modal {
         titleElement.setText(`Edit Rule ${this.ruleIndex + 1}: ${displayPath}`);
       }
     };
-    contentEl.createEl("h3", { text: "Field Path" });
-    new import_obsidian2.Setting(contentEl).setName("Parent Field").setDesc('e.g., "Habits Yestoday", "Tags", "Project"').addText(
-      (text) => text.setPlaceholder("Parent field name").setValue(this.rule.parentField).onChange(async (value) => {
+    contentEl.createEl("h3", { text: "Property Path" });
+    new import_obsidian2.Setting(contentEl).setName("Parent Property").setDesc('e.g., "Habits Yestoday", "Tags", "Project"').addText(
+      (text) => text.setPlaceholder("Parent property name").setValue(this.rule.parentField).onChange(async (value) => {
         this.rule.parentField = value;
         await updateFieldPath();
       })
     );
-    new import_obsidian2.Setting(contentEl).setName("Child Field").setDesc("Optional - leave empty for top-level field").addText(
-      (text) => text.setPlaceholder("Child field name (optional)").setValue(this.rule.childField || "").onChange(async (value) => {
+    new import_obsidian2.Setting(contentEl).setName("Child Property").setDesc("Optional - leave empty for top-level property").addText(
+      (text) => text.setPlaceholder("Child property name (optional)").setValue(this.rule.childField || "").onChange(async (value) => {
         this.rule.childField = value || "";
         await updateFieldPath();
       })
@@ -3603,7 +3603,7 @@ var FrontmatterSuggesterSettingTab = class extends import_obsidian3.PluginSettin
   display() {
     const { containerEl } = this;
     containerEl.empty();
-    containerEl.createEl("h2", { text: "Frontmatter Auto-Suggest Settings" });
+    containerEl.createEl("h2", { text: "Frontmatter Suggester" });
     this.renderGlobalSettings(containerEl);
     this.renderFieldRules(containerEl);
   }
@@ -3635,7 +3635,7 @@ var FrontmatterSuggesterSettingTab = class extends import_obsidian3.PluginSettin
         await this.plugin.saveSettings();
       })
     );
-    new import_obsidian3.Setting(container).setName("Auto calculate indent").setDesc("Automatically calculate indent based on field depth").addToggle(
+    new import_obsidian3.Setting(container).setName("Auto calculate indent").setDesc("Automatically calculate indent based on property depth").addToggle(
       (toggle) => toggle.setValue(this.plugin.settings.globalSettings.autoIndent).onChange(async (value) => {
         this.plugin.settings.globalSettings.autoIndent = value;
         await this.plugin.saveSettings();
@@ -3643,7 +3643,7 @@ var FrontmatterSuggesterSettingTab = class extends import_obsidian3.PluginSettin
     );
   }
   renderFieldRules(container) {
-    container.createEl("h3", { text: "Field Rules" });
+    container.createEl("h3", { text: "Property Rules" });
     new import_obsidian3.Setting(container).addButton(
       (button) => button.setButtonText("+ Add New Rule").setCta().onClick(async () => {
         const newRule = {

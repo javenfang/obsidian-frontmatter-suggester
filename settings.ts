@@ -15,7 +15,7 @@ export class FrontmatterSuggesterSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		containerEl.createEl('h2', { text: 'Frontmatter Auto-Suggest Settings' });
+		containerEl.createEl('h2', { text: 'Frontmatter Suggester' });
 
 		// Global Settings
 		this.renderGlobalSettings(containerEl);
@@ -72,7 +72,7 @@ export class FrontmatterSuggesterSettingTab extends PluginSettingTab {
 
 		new Setting(container)
 			.setName('Auto calculate indent')
-			.setDesc('Automatically calculate indent based on field depth')
+			.setDesc('Automatically calculate indent based on property depth')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.globalSettings.autoIndent)
 				.onChange(async (value) => {
@@ -83,7 +83,7 @@ export class FrontmatterSuggesterSettingTab extends PluginSettingTab {
 	}
 
 	private renderFieldRules(container: HTMLElement): void {
-		container.createEl('h3', { text: 'Field Rules' });
+		container.createEl('h3', { text: 'Property Rules' });
 
 		// Add New Rule button
 		new Setting(container)
