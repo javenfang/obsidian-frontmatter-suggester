@@ -1,0 +1,161 @@
+/* Frontmatter Auto-Suggest Plugin Styles */
+
+/* Suggestion popup items */
+.frontmatter-suggestion-item {
+	display: flex;
+	align-items: center;
+	padding: 4px 8px;
+}
+
+.frontmatter-suggestion-icon {
+	margin-right: 8px;
+	font-size: 1.2em;
+}
+
+.frontmatter-suggestion-key {
+	font-weight: 500;
+	color: var(--text-normal);
+}
+
+.frontmatter-suggestion-desc {
+	color: var(--text-muted);
+	font-size: 0.9em;
+	margin-left: 4px;
+}
+
+/* Settings Tab */
+.frontmatter-rule-container {
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	padding: 16px;
+	margin-bottom: 16px;
+	background-color: var(--background-primary-alt);
+}
+
+.frontmatter-rule-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 12px;
+	padding-bottom: 8px;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.frontmatter-rule-title {
+	flex: 1;
+}
+
+.frontmatter-rule-controls {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.frontmatter-rule-delete {
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border: none;
+	border-radius: 4px;
+	padding: 4px 12px;
+	cursor: pointer;
+	font-size: 1.2em;
+	line-height: 1;
+}
+
+.frontmatter-rule-delete:hover {
+	background-color: var(--interactive-accent-hover);
+}
+
+.frontmatter-rule-content {
+	margin-top: 12px;
+}
+
+.frontmatter-rule-content h4 {
+	margin-top: 16px;
+	margin-bottom: 8px;
+	color: var(--text-normal);
+	font-size: 1em;
+	font-weight: 600;
+}
+
+.frontmatter-rule-content h5 {
+	margin-top: 12px;
+	margin-bottom: 6px;
+	color: var(--text-muted);
+	font-size: 0.95em;
+	font-weight: 600;
+}
+
+/* Text areas */
+.frontmatter-options-textarea,
+.frontmatter-units-textarea,
+.frontmatter-attribute-options-textarea {
+	width: 100%;
+	padding: 8px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background-color: var(--background-primary);
+	color: var(--text-normal);
+	font-family: var(--font-monospace);
+	font-size: 0.9em;
+	resize: vertical;
+}
+
+.frontmatter-options-textarea:focus,
+.frontmatter-units-textarea:focus,
+.frontmatter-attribute-options-textarea:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
+}
+
+.frontmatter-options-stats {
+	margin-top: 4px;
+	font-size: 0.85em;
+	color: var(--text-muted);
+}
+
+/* Attributes */
+.frontmatter-attribute-container {
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	padding: 12px;
+	margin-bottom: 12px;
+	background-color: var(--background-secondary);
+}
+
+.frontmatter-attribute-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 8px;
+	padding-bottom: 6px;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.frontmatter-attribute-delete {
+	background-color: transparent;
+	color: var(--text-muted);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 3px;
+	padding: 2px 8px;
+	cursor: pointer;
+	font-size: 1em;
+}
+
+.frontmatter-attribute-delete:hover {
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border-color: var(--interactive-accent);
+}
+
+/* Setting item descriptions */
+.setting-item-description ul {
+	margin: 4px 0;
+	padding-left: 20px;
+}
+
+.setting-item-description li {
+	font-family: var(--font-monospace);
+	font-size: 0.85em;
+	color: var(--text-muted);
+}

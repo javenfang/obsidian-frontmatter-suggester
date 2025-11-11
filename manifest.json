@@ -1,0 +1,10 @@
+{
+  "id": "frontmatter-suggester",
+  "name": "Frontmatter Auto-Suggest",
+  "version": "1.1.0",
+  "minAppVersion": "0.15.0",
+  "description": "Auto-suggest for frontmatter fields with multi-select support and customizable options",
+  "author": "Javen Fang",
+  "authorUrl": "https://github.com/javenfang",
+  "isDesktopOnly": false
+}

@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+package-lock.json
+npm-shrinkwrap.json
+
+# Build output
+dist/
+*.js
+*.js.map
+*.d.ts
+!esbuild.config.mjs
+!main.js
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Backup and temporary files
+*.bak
+*.tmp
+*.log
+
+# Environment
+.env
+.env.local

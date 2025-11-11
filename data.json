@@ -1,0 +1,104 @@
+{
+  "rules": [
+    {
+      "id": "rule-1762605736446-1ma94cwve",
+      "enabled": true,
+      "fieldPath": "Habits Yestoday.Exercises",
+      "sourceType": "inline",
+      "multiSelect": true,
+      "options": [
+        {
+          "key": "hiking",
+          "description": "爬山越野"
+        },
+        {
+          "key": "running",
+          "description": "跑步"
+        },
+        {
+          "key": "air_squat",
+          "description": "深蹲"
+        },
+        {
+          "key": "wall_sit",
+          "description": "靠墙静蹲"
+        },
+        {
+          "key": "plank",
+          "description": "平板支撑"
+        },
+        {
+          "key": "hip_bridge",
+          "description": "臀桥"
+        },
+        {
+          "key": "push_up",
+          "description": "俯卧撑"
+        }
+      ],
+      "displayFormat": {
+        "showDescription": false,
+        "showIcon": false
+      },
+      "description": "锻炼习惯",
+      "valueConfig": {
+        "type": "number",
+        "unitBehavior": "optional",
+        "outputFormat": "simple",
+        "units": [
+          {
+            "unit": "km"
+          }
+        ]
+      },
+      "parentField": "Habits Yestoday",
+      "childField": "Exercises"
+    },
+    {
+      "id": "rule-1762642020347-dp9qhos7c",
+      "enabled": true,
+      "parentField": "Habits Yestoday",
+      "childField": "Drugs",
+      "sourceType": "inline",
+      "options": [
+        {
+          "key": "硫糖铝"
+        },
+        {
+          "key": "海藻酸钠"
+        },
+        {
+          "key": "阿托伐他汀"
+        },
+        {
+          "key": "奥美拉唑"
+        }
+      ],
+      "displayFormat": {
+        "showDescription": true,
+        "showIcon": true
+      },
+      "description": "每日用药",
+      "valueConfig": {
+        "type": "number",
+        "unitBehavior": "optional",
+        "outputFormat": "simple",
+        "units": [
+          {
+            "unit": "g"
+          },
+          {
+            "unit": "ml"
+          }
+        ]
+      },
+      "fieldPath": "Habits Yestoday.Drugs"
+    }
+  ],
+  "globalSettings": {
+    "minMatchLength": 0,
+    "maxSuggestions": 10,
+    "caseSensitive": false,
+    "autoIndent": true
+  }
+}
