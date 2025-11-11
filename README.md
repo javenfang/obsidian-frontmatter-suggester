@@ -8,6 +8,22 @@ When you're filling out properties at the top of your notes, this plugin suggest
 
 **Example:** You have a daily exercise log. Instead of typing "hiking", "running", "push_ups" every day, just trigger the autocomplete and select from your list.
 
+## Why use standardized frontmatter?
+
+**For habit tracking and data analysis:** Consistent field names and formats are essential for querying your data with Dataview.
+
+When you track habits with standardized frontmatter:
+- Same field names every day → Easy to query across all notes
+- Validated values → Reliable statistics and charts
+- Structured format → Works seamlessly with Dataview queries
+
+**Example:** With consistent `Exercises.hiking` entries, you can easily create queries like:
+- Total hiking distance this month
+- Average daily exercise count
+- Habits completion trends
+
+Without standardized format, Dataview queries become unreliable or impossible.
+
 ## Key Features
 
 ### 🎯 Smart Suggestions
