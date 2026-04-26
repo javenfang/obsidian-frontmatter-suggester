@@ -3089,40 +3089,31 @@ var FrontmatterParser = class {
 var FrontmatterSuggester = class extends import_obsidian.EditorSuggest {
   constructor(app, settings) {
     super(app);
-    this.selectedItems = /* @__PURE__ */ new Set();
     this.isMultiSelectMode = false;
-    this.currentSuggestions = [];
     this.settings = settings;
     this.setInstructions([
       { command: "\u2191\u2193", purpose: "Navigate" },
-      { command: "Enter", purpose: "Toggle/Insert" },
-      { command: "Esc", purpose: "Insert selected & close" }
+      { command: "Enter", purpose: "Insert" },
+      { command: "Esc", purpose: "Close" }
     ]);
   }
   updateSettings(settings) {
     this.settings = settings;
   }
-  /**
-   * Determine when to show suggestions
-   */
   onTrigger(cursor, editor, file) {
-    if (!file) {
+    if (!file)
       return null;
-    }
-    if (!FrontmatterParser.isInFrontmatter(cursor, editor)) {
+    if (!FrontmatterParser.isInFrontmatter(cursor, editor))
       return null;
-    }
     const context = FrontmatterParser.getCurrentFieldPath(cursor, editor);
     if (!context)
       return null;
     const matchingRule = this.findMatchingRule(context.path);
-    if (!matchingRule || !matchingRule.enabled) {
+    if (!matchingRule || !matchingRule.enabled)
       return null;
-    }
     const suggestions = this.generateSuggestions(matchingRule, cursor, editor);
-    if (suggestions.length === 0) {
+    if (suggestions.length === 0)
       return null;
-    }
     const currentLine = editor.getLine(cursor.line);
     const fieldName = FrontmatterParser.extractFieldName(currentLine);
     let startCh;
@@ -3135,69 +3126,35 @@ var FrontmatterSuggester = class extends import_obsidian.EditorSuggest {
       startCh = cursor.ch;
     }
     const query = currentLine.substring(startCh, cursor.ch);
-    const triggerInfo = {
+    return {
       start: { line: cursor.line, ch: startCh },
       end: cursor,
       query
     };
-    return triggerInfo;
   }
-  /**
-   * Generate suggestion list
-   */
   getSuggestions(context) {
     const cursor = context.editor.getCursor();
     const fieldContext = FrontmatterParser.getCurrentFieldPath(cursor, context.editor);
-    if (!fieldContext) {
+    if (!fieldContext)
       return [];
-    }
     const matchingRule = this.findMatchingRule(fieldContext.path);
-    if (!matchingRule || !matchingRule.enabled) {
+    if (!matchingRule || !matchingRule.enabled)
       return [];
-    }
     this.isMultiSelectMode = matchingRule.multiSelect || false;
-    if (!this.context || this.context !== context) {
-      this.selectedItems.clear();
-    }
     let suggestions = this.generateSuggestions(matchingRule, cursor, context.editor);
-    if (suggestions.length === 0) {
+    if (suggestions.length === 0)
       return [];
-    }
     const ruleFieldPath = matchingRule.fieldPath || matchingRule.parentField;
     const ruleDepth = this.calculatePathDepth(ruleFieldPath);
     const pathDepth = this.calculatePathDepth(fieldContext.path);
     if (pathDepth === ruleDepth && context.query && context.query.trim() !== "") {
       suggestions = this.filterSuggestions(suggestions, context.query);
     }
-    const result = suggestions.slice(0, this.settings.globalSettings.maxSuggestions);
-    this.currentSuggestions = result;
-    return result;
+    return suggestions.slice(0, this.settings.globalSettings.maxSuggestions);
   }
-  /**
-   * Override close method to handle multi-select confirmation
-   */
-  close() {
-    if (this.isMultiSelectMode && this.selectedItems.size > 0 && this.context) {
-      const editor = this.context.editor;
-      const cursor = editor.getCursor();
-      const fieldContext = FrontmatterParser.getCurrentFieldPath(cursor, editor);
-      if (fieldContext) {
-        this.handleMultiSelection(editor, cursor, fieldContext);
-      }
-    }
-    super.close();
-  }
-  /**
-   * Render each suggestion
-   */
   renderSuggestion(suggestion, el) {
     el.createDiv({ cls: "frontmatter-suggestion-item" }, (div) => {
       var _a, _b;
-      if (this.isMultiSelectMode) {
-        const isSelected = this.selectedItems.has(suggestion.option.key);
-        const checkbox = isSelected ? "[\u2713] " : "[ ] ";
-        div.createSpan({ cls: "frontmatter-suggestion-checkbox", text: checkbox });
-      }
       if (suggestion.option.icon && ((_a = suggestion.rule.displayFormat) == null ? void 0 : _a.showIcon) !== false) {
         div.createSpan({ cls: "frontmatter-suggestion-icon", text: suggestion.option.icon });
       }
@@ -3205,152 +3162,128 @@ var FrontmatterSuggester = class extends import_obsidian.EditorSuggest {
       if (suggestion.option.description && ((_b = suggestion.rule.displayFormat) == null ? void 0 : _b.showDescription) !== false) {
         div.createSpan({ cls: "frontmatter-suggestion-desc", text: ` - ${suggestion.option.description}` });
       }
-      if (this.isMultiSelectMode && this.selectedItems.size > 0) {
-        div.createSpan({
-          cls: "frontmatter-suggestion-hint",
-          text: ` (${this.selectedItems.size} selected)`
-        });
-      }
     });
   }
   /**
-   * Handle suggestion selection
-   * In multi-select mode: toggles selection
-   * In single-select mode: inserts immediately
+   * Insert sub-item after the last existing sub-item (preserving pick order).
+   * In multi-select mode, return the cursor to the parent field line so
+   * EditorSuggest's onTrigger fires again with a dedup-filtered list and
+   * the dropdown re-opens automatically. The cursor reposition is deferred
+   * via setTimeout so it runs after Obsidian's built-in auto-close.
    */
-  selectSuggestion(suggestion, evt) {
+  selectSuggestion(suggestion, _evt) {
     const editor = this.context.editor;
     const cursor = editor.getCursor();
     const fieldContext = FrontmatterParser.getCurrentFieldPath(cursor, editor);
     if (!fieldContext)
       return;
-    if (this.isMultiSelectMode) {
-      if (this.selectedItems.has(suggestion.option.key)) {
-        this.selectedItems.delete(suggestion.option.key);
-      } else {
-        this.selectedItems.add(suggestion.option.key);
-      }
-      this.updateSuggestionsDisplay();
-    } else {
-      this.handleParentFieldSelection(suggestion, editor, cursor, fieldContext);
-    }
-  }
-  /**
-   * Update the suggestions display to reflect current selection state
-   */
-  updateSuggestionsDisplay() {
-    const suggestEl = this.suggestEl;
-    if (!suggestEl)
+    const matchingRule = this.findMatchingRule(fieldContext.path);
+    if (!matchingRule)
       return;
-    const suggestionEls = suggestEl.querySelectorAll(".suggestion-item");
-    this.currentSuggestions.forEach((suggestion, index) => {
-      const el = suggestionEls[index];
-      if (el) {
-        el.empty();
-        this.renderSuggestion(suggestion, el);
-      }
-    });
-  }
-  /**
-   * Handle multi-selection insertion
-   */
-  handleMultiSelection(editor, cursor, fieldContext) {
-    const currentLine = editor.getLine(cursor.line);
-    const fieldName = FrontmatterParser.extractFieldName(currentLine);
-    if (fieldName) {
-      const itemIndent = fieldContext.indent + 2;
-      const indentStr = " ".repeat(itemIndent);
-      const selectedArray = Array.from(this.selectedItems);
-      const insertLines = selectedArray.map((key) => `
-${indentStr}${key}: `).join("");
-      const insertPos = { line: cursor.line, ch: currentLine.length };
-      editor.replaceRange(insertLines, insertPos);
-      const newCursorPos = {
-        line: cursor.line + selectedArray.length,
-        ch: itemIndent + selectedArray[selectedArray.length - 1].length + 2
-      };
-      editor.setCursor(newCursorPos);
-    } else {
-      const itemIndent = cursor.line > 0 ? FrontmatterParser.getIndent(currentLine) : fieldContext.indent + 2;
-      const indentStr = " ".repeat(itemIndent);
-      const selectedArray = Array.from(this.selectedItems);
-      const insertLines = selectedArray.map((key, index) => {
-        return index === 0 ? `${indentStr}${key}: ` : `
-${indentStr}${key}: `;
-      }).join("");
-      const from = cursor;
-      const to = { line: cursor.line, ch: currentLine.length };
-      editor.replaceRange(insertLines, from, to);
-      const newCursorPos = {
-        line: cursor.line + selectedArray.length - 1,
-        ch: itemIndent + selectedArray[selectedArray.length - 1].length + 2
-      };
-      editor.setCursor(newCursorPos);
-    }
-    this.selectedItems.clear();
-  }
-  /**
-   * Case 1: Handle selection on parent field level
-   * Example: User selects "阿托伐他汀" when cursor is on "Drugs:"
-   * Action: Insert new line with "  阿托伐他汀: "
-   */
-  handleParentFieldSelection(suggestion, editor, cursor, fieldContext) {
-    const currentLine = editor.getLine(cursor.line);
-    const fieldName = FrontmatterParser.extractFieldName(currentLine);
-    if (fieldName) {
-      const itemIndent = fieldContext.indent + 2;
-      const indentStr = " ".repeat(itemIndent);
-      const newLineText = `
+    const ruleFieldPath = matchingRule.fieldPath || matchingRule.parentField;
+    const parentLine = this.findRuleParentLine(ruleFieldPath, editor);
+    if (parentLine === null)
+      return;
+    const parentLineText = editor.getLine(parentLine);
+    const parentIndent = FrontmatterParser.getIndent(parentLineText);
+    const subIndent = parentIndent + 2;
+    const indentStr = " ".repeat(subIndent);
+    const insertAfterLine = this.findLastSubItemLine(editor, parentLine, parentIndent, subIndent);
+    const insertAfterText = editor.getLine(insertAfterLine);
+    const newLineText = `
 ${indentStr}${suggestion.option.key}: `;
-      const insertPos = { line: cursor.line, ch: currentLine.length };
-      editor.replaceRange(newLineText, insertPos);
-      const newCursorPos = {
-        line: cursor.line + 1,
-        ch: itemIndent + suggestion.option.key.length + 2
-        // +2 for ": "
-      };
-      editor.setCursor(newCursorPos);
-    } else {
-      const itemIndent = cursor.line > 0 ? FrontmatterParser.getIndent(currentLine) : fieldContext.indent + 2;
-      const indentStr = " ".repeat(itemIndent);
-      const insertText = `${indentStr}${suggestion.option.key}: `;
-      const from = cursor;
-      const to = { line: cursor.line, ch: currentLine.length };
-      editor.replaceRange(insertText, from, to);
-      const newCursorPos = {
-        line: cursor.line,
-        ch: from.ch + insertText.length
-      };
-      editor.setCursor(newCursorPos);
+    editor.replaceRange(
+      newLineText,
+      { line: insertAfterLine, ch: insertAfterText.length }
+    );
+    if (!this.isMultiSelectMode) {
+      editor.setCursor({
+        line: insertAfterLine + 1,
+        ch: subIndent + suggestion.option.key.length + 2
+      });
+      return;
     }
+    setTimeout(() => {
+      const text = editor.getLine(parentLine);
+      editor.setCursor({ line: parentLine, ch: text.length });
+    }, 0);
   }
   /**
-   * Calculate depth of a field path
-   * Example: "Habits Yestoday.Drugs" = 2 levels
+   * Find the editor line where a rule's parent field lives.
+   * Walks the path segment by segment by indent (each level = +2 spaces).
    */
+  findRuleParentLine(ruleFieldPath, editor) {
+    const bounds = FrontmatterParser.getFrontmatterBounds(editor);
+    if (!bounds)
+      return null;
+    const parts = ruleFieldPath.split(".").filter((p) => p.length > 0);
+    if (parts.length === 0)
+      return null;
+    let currentLine = -1;
+    for (let i = bounds.start + 1; i < bounds.end; i++) {
+      const line = editor.getLine(i);
+      if (FrontmatterParser.getIndent(line) === 0 && FrontmatterParser.extractFieldName(line) === parts[0]) {
+        currentLine = i;
+        break;
+      }
+    }
+    if (currentLine === -1)
+      return null;
+    for (let p = 1; p < parts.length; p++) {
+      const nestedName = parts[p];
+      const expectedIndent = p * 2;
+      let found = false;
+      for (let j = currentLine + 1; j < bounds.end; j++) {
+        const line = editor.getLine(j);
+        const indent = FrontmatterParser.getIndent(line);
+        if (indent < expectedIndent && line.trim() !== "")
+          break;
+        if (FrontmatterParser.extractFieldName(line) === nestedName && indent === expectedIndent) {
+          currentLine = j;
+          found = true;
+          break;
+        }
+      }
+      if (!found)
+        return null;
+    }
+    return currentLine;
+  }
+  /**
+   * Find the last existing sub-item line under a parent. Returns parentLine
+   * itself if there are no sub-items yet (so a new sub-item gets inserted
+   * right below the parent).
+   */
+  findLastSubItemLine(editor, parentLine, parentIndent, subIndent) {
+    const bounds = FrontmatterParser.getFrontmatterBounds(editor);
+    if (!bounds)
+      return parentLine;
+    let last = parentLine;
+    for (let l = parentLine + 1; l < bounds.end; l++) {
+      const text = editor.getLine(l);
+      const indent = FrontmatterParser.getIndent(text);
+      if (text.trim() !== "" && indent <= parentIndent)
+        break;
+      if (indent === subIndent && FrontmatterParser.extractFieldName(text) !== null) {
+        last = l;
+      }
+    }
+    return last;
+  }
   calculatePathDepth(fieldPath) {
     return fieldPath.split(".").filter((p) => p.length > 0).length;
   }
-  /**
-   * Find matching rule for a field path
-   */
   findMatchingRule(fieldPath) {
     for (const rule of this.settings.rules) {
-      if (rule.fieldPath === fieldPath) {
+      if (rule.fieldPath === fieldPath)
         return rule;
-      }
     }
     for (const rule of this.settings.rules) {
-      if (fieldPath.startsWith(rule.fieldPath + ".")) {
+      if (fieldPath.startsWith(rule.fieldPath + "."))
         return rule;
-      }
     }
     return null;
   }
-  /**
-   * Generate suggestions based on rule and context
-   * Only generates parent field level suggestions
-   */
   generateSuggestions(rule, cursor, editor) {
     const fieldContext = FrontmatterParser.getCurrentFieldPath(cursor, editor);
     if (!fieldContext)
@@ -3359,16 +3292,11 @@ ${indentStr}${suggestion.option.key}: `;
     const ruleDepth = this.calculatePathDepth(ruleFieldPath);
     const pathDepth = this.calculatePathDepth(fieldContext.path);
     if (pathDepth === ruleDepth) {
-      return this.generateParentFieldSuggestions(rule, cursor, editor);
+      return this.generateParentFieldSuggestions(rule, editor);
     }
     return [];
   }
-  /**
-   * Case 1: Generate suggestions for parent field level
-   * Example: Show medication options when cursor is on "Drugs:"
-   * User can select which medications to add
-   */
-  generateParentFieldSuggestions(rule, _cursor, editor) {
+  generateParentFieldSuggestions(rule, editor) {
     const suggestions = [];
     const ruleFieldPath = rule.fieldPath || rule.parentField;
     const existingItems = FrontmatterParser.getExistingSubItemsByPath(
@@ -3391,19 +3319,13 @@ ${indentStr}${suggestion.option.key}: `;
         }
         break;
       case "vault-tags":
-        break;
       case "vault-files":
-        break;
       case "date":
-        break;
       case "recent-values":
         break;
     }
     return suggestions;
   }
-  /**
-   * Filter suggestions by query
-   */
   filterSuggestions(suggestions, query) {
     const caseSensitive = this.settings.globalSettings.caseSensitive;
     const normalizedQuery = caseSensitive ? query : query.toLowerCase();
@@ -3413,9 +3335,6 @@ ${indentStr}${suggestion.option.key}: `;
       return key.includes(normalizedQuery) || desc.includes(normalizedQuery);
     });
   }
-  /**
-   * Build display text for suggestion
-   */
   buildDisplayText(option, rule) {
     var _a, _b;
     let text = option.key;
@@ -3427,9 +3346,6 @@ ${indentStr}${suggestion.option.key}: `;
     }
     return text;
   }
-  /**
-   * Build insert text for suggestion
-   */
   buildInsertText(option) {
     return `${option.key}: `;
   }
